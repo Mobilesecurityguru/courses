@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Security Learning Module</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --background-color: #f8fafc;
+            --text-color: #1e293b;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: var(--background-color);
+            color: var(--text-color);
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: var(--text-color);
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .content-section {
+            display: none;
+            padding: 20px;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            padding: 10px 0;
+        }
+
+        button {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #1d4ed8;
+        }
+
+        button:disabled {
+            background-color: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        .progress-dots {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin: 20px 0;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            cursor: pointer;
+        }
+
+        .dot.active {
+            background: var(--primary-color);
+        }
+
+        .section-content {
+            margin-bottom: 20px;
+        }
+
+        .key-points {
+            background: #f1f5f9;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 15px;
+        }
+
+        .key-points ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .key-points li {
+            margin: 8px 0;
+        }
+
+        /* Matching Game Styles */
+        .matching-game {
+            margin-top: 20px;
+            padding: 20px;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .difficulty-selector {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .difficulty-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .difficulty-btn.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .difficulty-btn:not(.active) {
+            background: #e2e8f0;
+            color: #475569;
+        }
+
+        .card {
+            perspective: 1000px;
+            height: 120px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            cursor: pointer;
+        }
+
+        .card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            background: white;
+            border: 2px solid #e2e8f0;
+        }
+
+        .card-back {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #1d4ed8 100%);
+            color: white;
+            transform: rotateY(180deg);
+        }
+
+        .card.matched .card-face {
+            border-color: #22c55e;
+            background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+        }
+
+        .matching-game h3 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .matching-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .card.selected {
+            border-color: var(--primary-color);
+            background: #eff6ff;
+        }
+
+        .card.matched {
+            background: #dcfce7;
+            border-color: #22c55e;
+        }
+
+        .game-controls {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .score-display {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                padding: 15px;
+            }
+
+            .header h1 {
+                font-size: 20px;
+            }
+
+            button {
+                padding: 8px 16px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Module 1: Introduction to Mobile Security</h1>
+        </div>
+
+        <div class="content-section active" data-section="1">
+            <h2>What is Mobile Security?</h2>
+            <div class="section-content">
+                <p>Mobile security refers to the protection of smartphones, tablets, and other portable devices from threats and vulnerabilities. It encompasses the measures taken to protect both the device and the data it contains.</p>
+                <div class="key-points">
+                    <h3>Key Points:</h3>
+                    <ul>
+                        <li>Protection of mobile devices from threats</li>
+                        <li>Security of personal and business data</li>
+                        <li>Prevention of unauthorized access</li>
+                        <li>Safeguarding against malware and cyber attacks</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-section" data-section="2">
+            <h2>Device Security</h2>
+            <div class="section-content">
+                <p>Device security forms the foundation of mobile security, incorporating both physical and digital protection measures.</p>
+                <div class="key-points">
+                    <h3>Key Components:</h3>
+                    <ul>
+                        <li>Physical device protection</li>
+                        <li>Screen locks and biometric authentication</li>
+                        <li>Device encryption</li>
+                        <li>Secure boot processes</li>
+                        <li>Regular security updates</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-section" data-section="3">
+            <h2>Network Security</h2>
+            <div class="section-content">
+                <p>Network security focuses on protecting data as it travels between your device and other systems or the internet.</p>
+                <div class="key-points">
+                    <h3>Key Features:</h3>
+                    <ul>
+                        <li>Secure Wi-Fi connections</li>
+                        <li>VPN usage</li>
+                        <li>Bluetooth security</li>
+                        <li>Cellular network security</li>
+                        <li>Man-in-the-middle attack prevention</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-section" data-section="4">
+            <h2>Data Security</h2>
+            <div class="section-content">
+                <p>Data security ensures the protection of information stored on or transmitted by mobile devices.</p>
+                <div class="key-points">
+                    <h3>Key Elements:</h3>
+                    <ul>
+                        <li>Encryption at rest and in transit</li>
+                        <li>Secure data backup</li>
+                        <li>Remote data wiping capabilities</li>
+                        <li>Data access controls</li>
+                        <li>Privacy settings management</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-section" data-section="5">
+            <h2>Knowledge Check: Matching Game</h2>
+            <div class="section-content">
+                <p>Test your knowledge by matching mobile security concepts with their descriptions.</p>
+                <div class="matching-game">
+                    <h3>Match the Security Concepts</h3>
+                    <div class="difficulty-selector">
+                        <button class="difficulty-btn active" data-difficulty="easy">Easy</button>
+                        <button class="difficulty-btn" data-difficulty="medium">Medium</button>
+                        <button class="difficulty-btn" data-difficulty="hard">Hard</button>
+                    </div>
+                    <div class="matching-cards"></div>
+                    <div class="score-display">Score: <span id="score">0</span> | Time: <span id="timer">00:00</span></div>
+                    <div class="game-controls">
+                        <button id="resetGame">Reset Game</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="progress-dots"></div>
+
+        <div class="navigation">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            let currentSection = 1;
+            const totalSections = $('.content-section').length;
+
+            // Create progress dots
+            for (let i = 1; i <= totalSections; i++) {
+                $('.progress-dots').append(`<div class="dot ${i === 1 ? 'active' : ''}" data-section="${i}"></div>`);
+            }
+
+            function updateNavigation() {
+                $('#prevBtn').prop('disabled', currentSection === 1);
+                $('#nextBtn').prop('disabled', currentSection === totalSections);
+                $('.dot').removeClass('active').eq(currentSection - 1).addClass('active');
+            }
+
+            function showSection(sectionNumber) {
+                $('.content-section').removeClass('active');
+                $(`.content-section[data-section="${sectionNumber}"]`).addClass('active');
+                currentSection = sectionNumber;
+                updateNavigation();
+            }
+
+            $('#nextBtn').click(function() {
+                if (currentSection < totalSections) {
+                    showSection(currentSection + 1);
+                }
+            });
+
+            $('#prevBtn').click(function() {
+                if (currentSection > 1) {
+                    showSection(currentSection - 1);
+                }
+            });
+
+            $('.dot').click(function() {
+                showSection($(this).data('section'));
+            });
+
+            // Matching Game Logic
+            let gameTimer;
+            let seconds = 0;
+            let currentDifficulty = 'easy';
+
+            const allMatchingPairs = {
+                easy: [
+                { term: "Device Encryption", definition: "Converting data into a code to prevent unauthorized access" },
+                { term: "Biometric Authentication", definition: "Using unique physical characteristics to verify identity" },
+                { term: "VPN", definition: "Secure tunnel for encrypted internet connection" },
+                { term: "Remote Wiping", definition: "Deleting data from a device remotely if lost or stolen" },
+                { term: "Two-Factor Authentication", definition: "Using two different methods to verify user identity" },
+                { term: "Secure Boot", definition: "Ensuring only trusted software runs during startup" }
+                ],
+                medium: [
+                    { term: "Man-in-the-Middle Attack", definition: "Intercepting communications between two parties" },
+                    { term: "Zero-Day Vulnerability", definition: "Security flaw unknown to the software vendor" },
+                    { term: "SSL/TLS", definition: "Protocols for secure data transmission over networks" },
+                    { term: "Mobile Malware", definition: "Malicious software targeting mobile devices" },
+                    { term: "App Sandboxing", definition: "Isolating applications to prevent unauthorized access" },
+                    { term: "Security Patch", definition: "Software update that addresses security vulnerabilities" },
+                    { term: "Phishing", definition: "Fraudulent attempts to obtain sensitive information" },
+                    { term: "Jailbreaking", definition: "Removing software restrictions on mobile devices" }
+                ],
+                hard: [
+                    { term: "Runtime Application Self-Protection", definition: "Real-time detection and prevention of attacks" },
+                    { term: "Certificate Pinning", definition: "Validating specific SSL certificates for connections" },
+                    { term: "OAuth", definition: "Protocol for secure third-party authorization" },
+                    { term: "Device Fingerprinting", definition: "Collecting device characteristics for identification" },
+                    { term: "Containerization", definition: "Isolating corporate data from personal data" },
+                    { term: "Code Signing", definition: "Digitally signing applications to verify authenticity" },
+                    { term: "Network Segmentation", definition: "Dividing network into isolated security zones" },
+                    { term: "Deep Packet Inspection", definition: "Detailed analysis of network traffic content" },
+                    { term: "Endpoint Detection", definition: "Monitoring devices for security threats" },
+                    { term: "Zero Trust Security", definition: "Requiring verification from everyone" }
+                ]
+            };
+
+            function updateTimer() {
+                seconds++;
+                const minutes = Math.floor(seconds / 60);
+                const remainingSeconds = seconds % 60;
+                $('#timer').text(
+                    `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`
+                );
+            }
+
+            function startTimer() {
+                clearInterval(gameTimer);
+                seconds = 0;
+                $('#timer').text('00:00');
+                gameTimer = setInterval(updateTimer, 1000);
+            }
+
+            function stopTimer() {
+                clearInterval(gameTimer);
+            }
+
+            let selectedCards = [];
+            let matchedPairs = 0;
+            let score = 0;
+
+            function shuffleArray(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+                return array;
+            }
+
+            function initializeGame(difficulty = currentDifficulty) {
+                matchedPairs = 0;
+                score = 0;
+                selectedCards = [];
+                currentDifficulty = difficulty;
+                $('#score').text(score);
+                startTimer();
+                
+                const pairs = allMatchingPairs[difficulty];
+                const gameCards = [
+                    ...pairs.map(pair => ({ text: pair.term, type: 'term', match: pair.definition })),
+                    ...pairs.map(pair => ({ text: pair.definition, type: 'definition', match: pair.term }))
+                ];
+                
+                const shuffledCards = shuffleArray(gameCards);
+                $('.matching-cards').empty();
+                
+                shuffledCards.forEach((card, index) => {
+                    $('.matching-cards').append(`
+                        <div class="card" data-index="${index}" data-type="${card.type}" data-match="${card.match}">
+                            <div class="card-inner">
+                                <div class="card-face card-front">?</div>
+                                <div class="card-face card-back">${card.text}</div>
+                            </div>
+                        </div>
+                    `);
+                });
+            }
+
+            $(document).on('click', '.card', function() {
+                if ($(this).hasClass('matched') || $(this).hasClass('selected')) {
+                    return;
+                }
+
+                $(this).addClass('selected flipped');
+                selectedCards.push($(this));
+
+                if (selectedCards.length === 2) {
+                    const card1 = selectedCards[0];
+                    const card2 = selectedCards[1];
+
+                    if ((card1.data('type') === 'term' && card2.data('type') === 'definition' ||
+                         card1.data('type') === 'definition' && card2.data('type') === 'term') &&
+                        (card1.data('match') === card2.text() || card2.data('match') === card1.text())) {
+                        
+                        // Correct match
+                        card1.removeClass('selected').addClass('matched');
+                        card2.removeClass('selected').addClass('matched');
+                        matchedPairs++;
+                        score += 10;
+                        $('#score').text(score);
+
+                        if (matchedPairs === matchingPairs.length) {
+                            setTimeout(() => {
+                                stopTimer();
+                                const timeStr = $('#timer').text();
+                                alert(`Congratulations! You've completed the ${currentDifficulty} difficulty in ${timeStr}!`);
+                            }, 500);
+                        }
+                    } else {
+                        // Incorrect match
+                        setTimeout(() => {
+                            card1.removeClass('selected flipped');
+                            card2.removeClass('selected flipped');
+                            score = Math.max(0, score - 5);
+                            $('#score').text(score);
+                        }, 1000);
+                    }
+
+                    selectedCards = [];
+                }
+            });
+
+            $('#resetGame').click(() => initializeGame(currentDifficulty));
+            
+            $('.difficulty-btn').click(function() {
+                $('.difficulty-btn').removeClass('active');
+                $(this).addClass('active');
+                initializeGame($(this).data('difficulty'));
+            });
+
+            // Initialize the game when reaching the game section
+            $(document).on('click', '.dot', function() {
+                if ($(this).data('section') === 5) {
+                    initializeGame();
+                }
+            });
+
+            // Initialize game if starting on game section
+            if (currentSection === 5) {
+                initializeGame();
+            }
+        });
+    </script>
+</body>
+</html>
